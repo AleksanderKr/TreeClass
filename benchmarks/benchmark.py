@@ -88,9 +88,19 @@ def treeclass_c45(prune):
 
 def chefboost_method(algorithm):
     """chefboost expects the target as the last column named "Decision" and
-    text columns of dtype object (it does not recognise the pandas 3 'str' dtype)."""
+    text columns of dtype object (it does not recognise the pandas 3 'str' dtype).
+    It writes the tree to outputs/rules/rules.py in the working directory and
+    imports it as a module, so that directory must be importable and the module
+    must be re-read for every fold."""
     def run(train, test, features):
         from chefboost import Chefboost as chef
+        cwd = str(Path.cwd())
+        if cwd not in sys.path:
+            sys.path.insert(0, cwd)
+        sys.dont_write_bytecode = True                 # no stale .pyc between folds
+        for module in [m for m in sys.modules if m == "outputs" or m.startswith("outputs.")]:
+            del sys.modules[module]                    # force re-import of the new rules
+
         df = train[features + [TARGET]].rename(columns={TARGET: "Decision"})
         df = df.astype({c: object for c in df.columns
                         if not pd.api.types.is_numeric_dtype(df[c])})

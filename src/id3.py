@@ -31,9 +31,8 @@ def entropy(labels):
     Only positive p_i are used (0 log 0 = 0); an empty set has entropy 0."""
     p = labels.value_counts(normalize=True)
     p = p[p > 0]
-    if p.empty:
-        return 0.0
-    return float(-(p * np.log2(p)).sum())
+    h = float(-(p * np.log2(p)).sum())
+    return h if h > 0 else 0.0
 
 
 def information_gain(data, feature, target):
