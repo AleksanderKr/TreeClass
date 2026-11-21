@@ -5,14 +5,21 @@ Validation of the implementation against hand-calculated reference values:
 Edge cases are tested in test_edge_cases.py.
 
 Run:  python test_examples.py      (or: python -m pytest test_examples.py)
+Run directly, the script also prints the intermediate steps of both
+examples in the order used in the article.
 """
+
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))   # for direct runs
 
 import c45
 import id3
 import visualize as viz
-
-import numpy as np
-import pandas as pd
 
 
 COLUMNS = ["Day", "Outlook", "Temperature", "Humidity", "Wind", "Play"]
@@ -172,7 +179,84 @@ def test_missing_value_quinlan_1993():
     assert prediction == ["Yes"]
 
 
+# --- intermediate steps, printed when the file is run directly ---------------
+
+def distribution(data):
+    """[n+, n-] as in the article: Yes first, then No."""
+    return f"[{(data.Play == 'Yes').sum()},{(data.Play == 'No').sum()}]"
+
+
+def days(data):
+    return "{" + ",".join(str(d) for d in data.Day) + "}"
+
+
+def label(test):
+    if test["threshold"] is None:
+        return test["feature"]
+    return f"{test['feature']} <= {test['threshold']:g}"
+
+
+def print_id3_node(title, data, features):
+    print(f"\n{title}: Days {days(data)}, {distribution(data)}, "
+          f"Entropy = {id3.entropy(data.Play):.4f}")
+    gains = {f: id3.information_gain(data, f, "Play") for f in features}
+    for f, g in sorted(gains.items(), key=lambda item: -item[1]):
+        print(f"  Gain({f}) = {g:.4f}")
+
+
+def print_id3_example():
+    print("=" * 70 + "\nID3: Play Tennis (categorical)\n" + "=" * 70)
+    d = CATEGORICAL
+    print_id3_node("S", d, FEATURES)
+    print("\nSplit on Outlook:")
+    for value in ("Sunny", "Overcast", "Rain"):
+        subset = d[d.Outlook == value]
+        print(f"  {value}: Days {days(subset)}, {distribution(subset)}, "
+              f"Entropy = {id3.entropy(subset.Play):.4f}")
+    remaining = [f for f in FEATURES if f != "Outlook"]
+    print_id3_node("Sunny", d[d.Outlook == "Sunny"], remaining)
+    print_id3_node("Rain", d[d.Outlook == "Rain"], remaining)
+    tree = id3.fit(d, "Play", FEATURES)
+    print(f"\nResulting tree {viz.tree_stats(tree)}:")
+    viz.print_tree(tree)
+
+
+def print_c45_node(title, data):
+    tests, chosen = c45_tests(data)
+    print(f"\n{title}: Days {days(data)}, {distribution(data)}, "
+          f"Entropy = {c45.entropy([(data.Play == 'Yes').sum(), (data.Play == 'No').sum()]):.4f}")
+    print(f"  {'Test':<22}{'Gain':>8}{'SplitInfo':>11}{'GainRatio':>11}")
+    for f in FEATURES:
+        if f in tests:
+            t = tests[f]
+            print(f"  {label(t):<22}{t['gain']:>8.4f}{t['split_info']:>11.4f}{t['gain_ratio']:>11.4f}")
+    average = np.mean([t["gain"] for t in tests.values()])
+    eligible = [label(t) for t in tests.values() if t["gain"] >= average - 1e-12]
+    print(f"  Average gain = {average:.4f}; tests with gain >= average: {', '.join(eligible)}")
+    print(f"  Selected: {label(chosen)}")
+
+
+def print_c45_example():
+    print("\n" + "=" * 70 + "\nC4.5: Play Tennis (numeric Temperature and Humidity)\n" + "=" * 70)
+    d = NUMERIC
+    for f in ("Temperature", "Humidity"):
+        values = np.sort(d[f].unique())
+        thresholds = (values[:-1] + values[1:]) / 2
+        print(f"\n{f}: values {', '.join(f'{v:g}' for v in values)}")
+        print(f"  candidate thresholds {', '.join(f'{t:g}' for t in thresholds)}")
+    print_c45_node("S", d)
+    print_c45_node("Sunny", d[d.Outlook == "Sunny"])
+    print_c45_node("Rain", d[d.Outlook == "Rain"])
+    raw, pruned = c45.fit(d, "Play", FEATURES)
+    print(f"\nTree before pruning {viz.tree_stats(raw)}:")
+    viz.print_tree(raw)
+    same = viz.tree_to_text(pruned) == viz.tree_to_text(raw)
+    print(f"Pruning (CF = 25%) {'keeps this tree' if same else 'changes this tree'}.\n")
+
+
 if __name__ == "__main__":
+    print_id3_example()
+    print_c45_example()
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     failed = 0
     for name, func in tests:

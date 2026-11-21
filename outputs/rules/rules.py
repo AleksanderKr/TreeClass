@@ -1,44 +1,58 @@
-def findDecision(obj): #obj[0]: sepal-length, obj[1]: sepal-width, obj[2]: petal-length, obj[3]: petal-width
-   # {"feature": "petal-length", "instances": 120, "metric_value": 1.585, "depth": 1}
-   if obj[2]>1.9927933150920052:
-      # {"feature": "petal-width", "instances": 80, "metric_value": 1.0, "depth": 2}
-      if obj[3]<=1.7:
-         # {"feature": "sepal-width", "instances": 42, "metric_value": 0.3712, "depth": 3}
-         if obj[1]>2.2:
-            # {"feature": "sepal-length", "instances": 39, "metric_value": 0.2918, "depth": 4}
-            if obj[0]<=6.0:
-               return 'Iris-versicolor'
-            elif obj[0]>6.0:
-               return 'Iris-versicolor'
+def findDecision(obj): #obj[0]: cap-shape, obj[1]: cap-surface, obj[2]: cap-color, obj[3]: bruises, obj[4]: odor, obj[5]: gill-attachment, obj[6]: gill-spacing, obj[7]: gill-size, obj[8]: gill-color, obj[9]: stalk-shape, obj[10]: stalk-root, obj[11]: stalk-surface-above-ring, obj[12]: stalk-surface-below-ring, obj[13]: stalk-color-above-ring, obj[14]: stalk-color-below-ring, obj[15]: veil-type, obj[16]: veil-color, obj[17]: ring-number, obj[18]: ring-type, obj[19]: spore-print-color, obj[20]: population, obj[21]: habitat
+   # {"feature": "odor", "instances": 7313, "metric_value": 0.9991, "depth": 1}
+   if obj[4] == 'n':
+      # {"feature": "spore-print-color", "instances": 3166, "metric_value": 0.2054, "depth": 2}
+      if obj[19] == 'n':
+         return 'e'
+      elif obj[19] == 'k':
+         return 'e'
+      elif obj[19] == 'w':
+         # {"feature": "veil-color", "instances": 557, "metric_value": 0.3727, "depth": 3}
+         if obj[16] == 'w':
+            # {"feature": "gill-size", "instances": 550, "metric_value": 0.3274, "depth": 4}
+            if obj[7] == 'b':
+               return 'e'
+            elif obj[7] == 'n':
+               # {"feature": "gill-spacing", "instances": 77, "metric_value": 0.9852, "depth": 5}
+               if obj[6] == 'w':
+                  return 'e'
+               elif obj[6] == 'c':
+                  return 'p'
+               else:
+                  return 'e'
             else:
-               return 'Iris-versicolor'
-         elif obj[1]<=2.2:
-            # {"feature": "sepal-length", "instances": 3, "metric_value": 0.9183, "depth": 4}
-            if obj[0]>5.0:
-               return 'Iris-versicolor'
-            elif obj[0]<=5.0:
-               return 'Iris-versicolor'
-            else:
-               return 'Iris-versicolor'
+               return 'e'
+         elif obj[16] == 'y':
+            return 'p'
          else:
-            return 'Iris-versicolor'
-      elif obj[3]>1.7:
-         # {"feature": "sepal-length", "instances": 38, "metric_value": 0.1756, "depth": 3}
-         if obj[0]>5.9:
-            return 'Iris-virginica'
-         elif obj[0]<=5.9:
-            # {"feature": "sepal-width", "instances": 6, "metric_value": 0.65, "depth": 4}
-            if obj[1]<=3.0:
-               return 'Iris-virginica'
-            elif obj[1]>3.0:
-               return 'Iris-versicolor'
-            else:
-               return 'Iris-virginica'
-         else:
-            return 'Iris-virginica'
+            return 'e'
+      elif obj[19] == 'r':
+         return 'p'
+      elif obj[19] == 'h':
+         return 'e'
+      elif obj[19] == 'o':
+         return 'e'
+      elif obj[19] == 'y':
+         return 'e'
+      elif obj[19] == 'b':
+         return 'e'
       else:
-         return 'Iris-versicolor'
-   elif obj[2]<=1.9927933150920052:
-      return 'Iris-setosa'
+         return 'e'
+   elif obj[4] == 'f':
+      return 'p'
+   elif obj[4] == 'y':
+      return 'p'
+   elif obj[4] == 's':
+      return 'p'
+   elif obj[4] == 'a':
+      return 'e'
+   elif obj[4] == 'l':
+      return 'e'
+   elif obj[4] == 'p':
+      return 'p'
+   elif obj[4] == 'c':
+      return 'p'
+   elif obj[4] == 'm':
+      return 'p'
    else:
-      return 'Iris-setosa'
+      return 'e'
