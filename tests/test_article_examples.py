@@ -1,14 +1,12 @@
 """
 Validation of the implementation against hand-calculated reference values:
   * the ID3 and C4.5 examples of the article (Play Tennis data),
-  * Quinlan (1993): gain and split info with one unknown Outlook value,
-  * the binomial upper limit used by error-based pruning,
-  * edge cases raised in review (pure/empty nodes, input tree not modified, ...).
+  * Quinlan (1993): gain and split info with one unknown Outlook value.
+Edge cases are tested in test_edge_cases.py.
 
 Run:  python test_examples.py      (or: python -m pytest test_examples.py)
 """
 
-import copy
 import c45
 import id3
 import visualize as viz
@@ -50,7 +48,7 @@ NUMERIC = pd.DataFrame([
     [13, "Overcast", 81, 75, "Weak", "Yes"],
     [14, "Rain", 71, 80, "Strong", "No"],
 ], columns=COLUMNS)
-FEATURES = ["Outlook", "Temperature", "Humidity", "Wind"]   # Day excluded
+FEATURES = ["Outlook", "Temperature", "Humidity", "Wind"]
 
 
 def close(a, b, tol=5e-5):
@@ -67,12 +65,9 @@ def c45_tests(data):
     return {t["feature"]: t for t in tests}, c45.choose_test(tests)
 
 
-# --- measures and edge cases
+# --- entropy of the whole dataset -------------------------------------------
 
-def test_entropy_edge_cases():
-    assert id3.entropy(pd.Series(["Yes"] * 4)) == 0.0          # pure node: exactly 0
-    assert id3.entropy(pd.Series([], dtype=object)) == 0.0     # empty set
-    assert c45.entropy([4, 0]) == 0.0 and c45.entropy([]) == 0.0
+def test_entropy_of_whole_dataset():
     assert close(id3.entropy(CATEGORICAL["Play"]), 0.9403)
     assert close(c45.entropy([9, 5]), 0.9403)
 
@@ -151,41 +146,6 @@ def test_c45_tree_and_pruning():
     assert viz.tree_to_text(pruned) == viz.tree_to_text(raw)    # pruning keeps this tree
 
 
-def test_pruning_does_not_modify_input():
-    rng = np.random.default_rng(0)
-    noisy = NUMERIC.copy()
-    noisy["Play"] = rng.permutation(noisy["Play"].values)
-    data = noisy.copy()
-    data[c45.W] = 1.0
-    raw, _ = c45.fit(noisy, "Play", FEATURES)
-    before = copy.deepcopy(raw)
-    pruned = c45.prune(raw, data, "Play")
-    assert raw == before
-    assert viz.tree_stats(pruned)["leaves"] <= viz.tree_stats(raw)["leaves"]
-
-
-def test_pruning_whole_subtree():
-    """A node whose children are not all leaves can still become a leaf."""
-    df = pd.DataFrame({"a": list("yyyxxxxxxyyy"),
-                       "b": [2, 2, 3, 2, 2, 2, 2, 3, 1, 3, 2, 0],
-                       "y": list("npppnppppppp")})
-    raw, pruned = c45.fit(df, "y", ["a", "b"])
-    assert viz.depth(raw) == 3                       # root's children include a subtree
-    assert pruned["type"] == "leaf" and pruned["label"] == "p"
-
-
-def test_pessimistic_errors():
-    """U_CF(0, n): probability of 0 errors in n cases at error rate U equals CF."""
-    for n in (1, 2, 6, 14):
-        u = c45.pessimistic_errors(n, 0) / n
-        assert close((1 - u) ** n, 0.25, 1e-9)
-    assert close(c45.pessimistic_errors(1, 0), 0.75)             # a single-case leaf
-    # more errors or a lower CF -> higher estimate; fractional values are allowed
-    assert c45.pessimistic_errors(14, 5) > c45.pessimistic_errors(14, 4) > 4
-    assert c45.pessimistic_errors(14, 5, cf=0.1) > c45.pessimistic_errors(14, 5, cf=0.25)
-    assert 0.75 < c45.pessimistic_errors(2.4, 0.4) < c45.pessimistic_errors(2.4, 1)
-
-
 # --- missing values ----------------------------------------------------------
 
 def test_missing_value_quinlan_1993():
@@ -210,21 +170,6 @@ def test_missing_value_quinlan_1993():
     prediction = c45.predict(raw, pd.DataFrame([{"Outlook": np.nan, "Temperature": 70,
                                                  "Humidity": 70, "Wind": "Weak"}]))
     assert prediction == ["Yes"]
-
-
-def test_id3_rejects_missing_values():
-    data = CATEGORICAL.copy()
-    data.loc[0, "Outlook"] = np.nan
-    try:
-        id3.fit(data, "Play", FEATURES)
-        assert False, "expected ValueError"
-    except ValueError:
-        pass
-
-
-def test_identifier_column_is_used_when_not_excluded():
-    tree = id3.fit(CATEGORICAL, "Play", ["Day", *FEATURES])
-    assert tree["feature"] == "Day"
 
 
 if __name__ == "__main__":

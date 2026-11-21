@@ -223,11 +223,13 @@ def build_tree(data, target, features, domains, numeric, min_cases, parent_label
 def pessimistic_errors(n, e, cf=0.25):
     """Predicted errors U_CF(e, n) * n of a leaf with n cases and e errors:
     the upper limit of the binomial confidence interval at level CF
-    (Quinlan, 1993). Computed as in C4.5's code (it also works for
-    fractional n and e, which appear with missing values):
+    (Quinlan, 1993). Same formulas as AddErrs in C4.5's code (stats.c);
+    they also work for fractional n and e, which appear with missing values:
       e = 0      exact binomial bound: n * (1 - CF^(1/n))
       0 < e < 1  linear interpolation between e = 0 and e = 1
       e >= 1     normal approximation with continuity correction (e + 0.5)
+    One difference: z is the exact normal quantile (0.674 for CF = 25%,
+    as in Weka J48); C4.5 interpolates z from a table (0.69 for CF = 25%).
     """
     if n <= 0:
         return 0.0
@@ -269,7 +271,8 @@ def prune(tree, data, target, cf=0.25):
     node["branches"] = {k: prune(sub, parts[k], target, cf)
                         for k, sub in tree["branches"].items()}
 
-    if leaf_errors(data, target, node["label"], cf) <= subtree_errors(node, data, target, cf):
+    # As in C4.5's code (prune.c): the leaf may be worse by up to 0.1 predicted errors.
+    if leaf_errors(data, target, node["label"], cf) <= subtree_errors(node, data, target, cf) + 0.1:
         return make_leaf(node["label"], class_counts(data, target))
     return node
 

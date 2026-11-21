@@ -65,6 +65,24 @@ def _all_nodes(tree):
         yield from _all_nodes(child)
 
 
+# --- min_cases ---------------------------------------------------------------
+
+def test_min_cases_rejects_splits_with_too_few_cases():
+    """Temperature <= 84 and Humidity <= 67.5 split off a single case:
+    allowed with min_cases=1 (article example), rejected with min_cases=2."""
+    data = NUMERIC.copy()
+    data[c45.W] = 1.0
+    numeric = {"Temperature", "Humidity"}
+    domains = {f: sorted(data[f].unique().tolist(), key=str) for f in ("Outlook", "Wind")}
+    for min_cases, expected in ((1, {"Temperature": 84.0, "Humidity": 67.5}),
+                                (2, {"Temperature": 70.5, "Humidity": 82.5})):
+        tests = c45.candidate_tests(data, "Play", FEATURES, domains, numeric, min_cases)
+        thresholds = {t["feature"]: t["threshold"] for t in tests if t["threshold"] is not None}
+        assert thresholds == expected, min_cases
+    raw, _ = c45.fit(NUMERIC, "Play", FEATURES, min_cases=2)
+    assert raw["feature"] == "Outlook"
+
+
 # --- review e-mail, point 3: pruning scope -----------------------------------
 
 def test_pruning_collapses_a_node_whose_children_are_subtrees():
@@ -89,6 +107,20 @@ def test_pruning_does_not_modify_input_tree():
     pruned = c45.prune(raw, data, "Play")
     assert raw == before
     assert viz.tree_stats(pruned)["leaves"] <= viz.tree_stats(raw)["leaves"]
+
+
+# --- pruning tolerance (C4.5's code, prune.c) --------------------------------
+
+def test_pruning_chooses_leaf_up_to_0_1_errors_worse():
+    """The leaf (10 cases, 4 errors) is predicted worse than the subtree
+    (3 cases, 0 errors + 7 cases, 3 errors) by less than 0.1, so the node is pruned."""
+    df = pd.DataFrame({"a": list("xxxyyyyyyy"), "y": list("ppppppnnnn")})
+    leaf = c45.pessimistic_errors(10, 4)
+    subtree = c45.pessimistic_errors(3, 0) + c45.pessimistic_errors(7, 3)
+    assert subtree < leaf <= subtree + 0.1
+    raw, pruned = c45.fit(df, "y", ["a"])
+    assert raw["feature"] == "a"
+    assert pruned["type"] == "leaf" and pruned["label"] == "p"
 
 
 # --- review e-mail, point 5: identifier columns ------------------------------
