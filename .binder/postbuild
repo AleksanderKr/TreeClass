@@ -1,0 +1,3 @@
+#!/bin/bash
+set -e
+python benchmarks/j48_validation.py --download-only
