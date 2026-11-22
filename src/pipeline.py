@@ -1,18 +1,18 @@
 """
-Experiment pipeline for the decision-tree lab.
+Experiment pipeline for ID3 and C4.5 decision trees.
 
 Loads a CSV file, optionally holds out a test set, builds ID3 and/or C4.5
-trees, prints them with their size and accuracy and saves the drawings in out/.
+trees, prints them with their size and accuracy and saves the drawings
+in output/.
 
-Examples:
-    python run_pipeline.py                                   # Play Tennis (numeric), ID3 + C4.5
-    python run_pipeline.py --data data/play_tennis.csv --algo id3
-    python run_pipeline.py --data data/play_tennis_missing.csv --algo c45
-    python run_pipeline.py --data data/my.csv --target class --exclude id --test-size 0.3
+Run from the repository root:
+    python src/pipeline.py                                   # Play Tennis (numeric), ID3 + C4.5
+    python src/pipeline.py --data data/play_tennis.csv --algo id3
+    python src/pipeline.py --data data/play_tennis_missing.csv --algo c45
+    python src/pipeline.py --data data/my.csv --target class --exclude id --test-size 0.3
 """
 
 import argparse
-import importlib
 import os
 import sys
 
@@ -21,6 +21,7 @@ import pandas as pd
 import c45
 import id3
 import visualize as viz
+
 
 def load_data(path, target, exclude):
     """Read a CSV file ("?" and empty cells are missing values), drop excluded

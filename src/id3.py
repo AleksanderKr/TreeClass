@@ -5,21 +5,23 @@ The algorithm in one sentence: at every node pick the attribute with the
 highest information gain, split the data on *every* value of that attribute,
 and repeat recursively until the node is pure or no attributes are left.
 
-Assumptions of classic ID3 (kept on purpose, they are discussed in the lab):
+Assumptions of classic ID3, kept on purpose:
   * every attribute is treated as categorical - a numeric column is split
-    into one branch per distinct number (see Task 1 in the lab script),
+    into one branch per distinct number,
   * there are no missing values (use C4.5 or clean the data first),
   * there is no pruning.
 
-Tree representation (shared with 02_c45.py and 04_visualize.py):
+Tree representation (shared with c45.py and visualize.py):
   leaf: {"type": "leaf", "label": <class>, "counts": {<class>: <n>, ...}}
   node: {"type": "node", "feature": <attribute>, "threshold": None,
          "label": <majority class>, "counts": {...},
          "branches": {<value>: <subtree>, ...}}
+
+Run:  python src/id3.py --data data/play_tennis.csv --target Play
+      (the same options as pipeline.py)
 """
 
 import numpy as np
-import pandas as pd
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +145,6 @@ def predict(tree, data):
 
 
 if __name__ == "__main__":
-    # Same CLI as before: python 01_id3.py --data data/spacer.csv --target Spacer
     import sys
-    import run_pipeline
-    run_pipeline.main(["--algo", "id3", *sys.argv[1:]])
+    import pipeline
+    pipeline.main(["--algo", "id3", *sys.argv[1:]])

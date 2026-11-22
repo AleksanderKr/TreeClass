@@ -125,7 +125,7 @@ def treeclass_c45(prune):
 
 
 def chefboost_method(algorithm):
-        """chefboost (pip package) as a Python point of comparison. Its C4.5
+    """chefboost (pip package) as a Python point of comparison. Its C4.5
     differs from Quinlan's (and from TreeClass and J48), as its source shows:
       * the test with the best gain ratio is chosen, without the rule that
         its gain must be at least the average gain;
@@ -266,7 +266,7 @@ def run_benchmark(datasets, k=10, seed=0, use_chefboost=True, use_weka=True, fra
                 except Exception as err:
                     row = {"method": name, "error": f"{type(err).__name__}: {err}"}
                 rows.append({"dataset": dataset, "fraction": fraction, "cases": len(data), **row})
-                print(rows[-1])
+                print(f"{dataset}, {len(data)} cases, {name}: {row.get('error', 'done')}")
     return pd.DataFrame(rows)
 
 

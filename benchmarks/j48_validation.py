@@ -303,7 +303,7 @@ def main(argv=None):
             row = compare(load(dataset), treeclass_method, j48, args.folds, args.seed)
             rows.append({"dataset": dataset, "variant": f"C4.5 {variant} vs J48",
                          **row, "same_tree": same[variant]})
-            print(rows[-1])
+            print(f"{dataset}, {rows[-1]['variant']}: same_tree = {rows[-1]['same_tree']}")
 
         if dataset in ID3_DATASETS:
             def id3(train_file, test_file):
@@ -312,7 +312,7 @@ def main(argv=None):
                           args.folds, args.seed)
             rows.append({"dataset": dataset, "variant": "ID3 vs Id3", **row,
                          "same_tree": save_full_id3_trees(dataset, jar, out_dir, args.java)})
-            print(rows[-1])
+            print(f"{dataset}, {rows[-1]['variant']}: same_tree = {rows[-1]['same_tree']}")
 
     table = pd.DataFrame(rows)
     table.to_csv(out_dir / "j48_validation.csv", index=False)

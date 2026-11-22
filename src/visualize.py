@@ -1,8 +1,8 @@
 """
-Presentation of decision trees built by 01_id3.py and 02_c45.py:
+Presentation of decision trees built by id3.py and c45.py:
 text listing, tree statistics and a matplotlib drawing saved as PNG.
 
-Node format: see the docstring of 01_id3.py / 02_c45.py.
+Node format: see the docstring of id3.py / c45.py.
 """
 
 import os

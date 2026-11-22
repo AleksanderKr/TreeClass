@@ -4,7 +4,7 @@ Validation of the implementation against hand-calculated reference values:
   * Quinlan (1993): gain and split info with one unknown Outlook value.
 Edge cases are tested in test_edge_cases.py.
 
-Run:  python test_examples.py      (or: python -m pytest test_examples.py)
+Run:  python tests/test_article_examples.py   (or: python -m pytest tests/test_article_examples.py)
 Run directly, the script also prints the intermediate steps of both
 examples in the order used in the article.
 """

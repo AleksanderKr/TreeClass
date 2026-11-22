@@ -15,15 +15,19 @@ What C4.5 adds to ID3:
      split in proportion to the known rows in each branch.
   4. Error-based post-pruning: a subtree is replaced by a leaf when the
      leaf's predicted errors (upper limit of the binomial confidence interval,
-     confidence factor CF = 25% by default) are not larger than the subtree's.
+     confidence factor CF = 25% by default) are at most 0.1 above the
+     subtree's (as in C4.5's code).
 
-Tree representation (shared with 01_id3.py and 04_visualize.py):
+Tree representation (shared with id3.py and visualize.py):
   leaf: {"type": "leaf", "label": <class>, "counts": {<class>: <weight>}}
   node: {"type": "node", "feature": <attribute>,
          "threshold": None (categorical) or <t> (numeric),
          "label": <majority class>, "counts": {...},
          "fractions": {<branch>: <share of known weight>},
          "branches": {<value>: subtree}  or  {"<=": subtree, ">": subtree}}
+
+Run:  python src/c45.py --data data/play_tennis_numeric.csv --target Play
+      (the same options as pipeline.py)
 """
 
 import math
@@ -240,7 +244,7 @@ def pessimistic_errors(n, e, cf=0.25):
         return at_0 + e * (pessimistic_errors(n, 1.0, cf) - at_0)
     if e + 0.5 >= n:
         return e + 0.67 * (n - e)
-    z = NormalDist().inv_cdf(1 - cf)          # 0.674 for CF = 25%
+    z = NormalDist().inv_cdf(1 - cf)
     k = e + 0.5
     p = (k + z * z / 2 + z * math.sqrt(k * (1 - k / n) + z * z / 4)) / (n + z * z)
     return n * p
@@ -262,7 +266,9 @@ def subtree_errors(tree, data, target, cf):
 
 def prune(tree, data, target, cf=0.25):
     """Bottom-up pruning at every node (subtree replacement). Returns a NEW
-    tree; the input tree is not modified. Ties favour the leaf."""
+    tree; the input tree is not modified. The leaf is chosen when its
+    predicted errors are at most 0.1 above the subtree's (as in C4.5's code,
+    prune.c)."""
     if tree["type"] == "leaf":
         return tree
 
@@ -271,7 +277,6 @@ def prune(tree, data, target, cf=0.25):
     node["branches"] = {k: prune(sub, parts[k], target, cf)
                         for k, sub in tree["branches"].items()}
 
-    # As in C4.5's code (prune.c): the leaf may be worse by up to 0.1 predicted errors.
     if leaf_errors(data, target, node["label"], cf) <= subtree_errors(node, data, target, cf) + 0.1:
         return make_leaf(node["label"], class_counts(data, target))
     return node
@@ -338,7 +343,6 @@ def predict(tree, data):
 
 
 if __name__ == "__main__":
-    # python 02_c45.py --data data/spacer_liczbowy.csv --target Spacer
     import sys
-    import run_pipeline
-    run_pipeline.main(["--algo", "c45", *sys.argv[1:]])
+    import pipeline
+    pipeline.main(["--algo", "c45", *sys.argv[1:]])
