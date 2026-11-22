@@ -2,10 +2,10 @@
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/AleksanderKr/TreeClass/HEAD?urlpath=%2Fdoc%2Ftree%2FTreeClass_demo.ipynb)
 
-TreeClass is a Python toolkit for decision tree induction with the ID3 and C4.5 algorithms. It exposes every step of tree induction (entropy, information gain, gain ratio, numeric thresholds, missing-value weights, error-based pruning), prints and draws the induced trees, and is validated against the Weka reference implementations (J48 and Id3).
+TreeClass is a Python toolkit for decision tree induction with the ID3 and C4.5 algorithms. It shows the intermediate values of tree induction (entropy, information gain, gain ratio, numeric thresholds, missing-value weights, error-based pruning), prints and draws the induced trees, and is validated against the Weka implementations J48 and Id3.
 
 ## Table of Contents
-* [Interactive Demonstration (Zero Setup)](#interactive-demonstration-zero-setup)
+* [Interactive Demonstration](#interactive-demonstration)
 * [Installation](#installation)
 * [Repository Structure](#repository-structure)
 * [Input Data Format Specifications](#input-data-format-specifications)
@@ -19,15 +19,15 @@ TreeClass is a Python toolkit for decision tree induction with the ID3 and C4.5 
 * [Outputs](#outputs)
 * [License](#license)
 
-## Interactive Demonstration (Zero Setup)
+## Interactive Demonstration
 
-You can run and evaluate the entire toolkit directly in your browser using the preconfigured Jupyter Notebook environment. The notebook reproduces the examples of the software article step by step, the functional verification against Weka J48 and Id3, and the performance benchmarking suite.
+The notebook `TreeClass_demo.ipynb` can be run in the browser on Binder, without installation. It reproduces the examples of the software article step by step, the validation against Weka J48 and Id3, and the benchmark.
 
 [![Launch Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/AleksanderKr/TreeClass/HEAD?urlpath=%2Fdoc%2Ftree%2FTreeClass_demo.ipynb)
 
-*(Click the badge above to launch the reproducible capsule. The initial environment build may take a few minutes.)*
+*(Click the badge above to start Binder. The first build of the environment may take a few minutes.)*
 
-> Performance Note: Binder environments operate under strict resource constraints (limited RAM and CPU). The full benchmarking suite takes several minutes there; for faster execution, clone the repository and run the notebook locally.
+> Performance Note: Binder provides limited RAM and CPU, so the full benchmark takes several minutes there. For faster execution, clone the repository and run the notebook locally.
 
 ## Installation
 
@@ -112,7 +112,7 @@ Use the pipeline script `src/pipeline.py` from the repository root. It builds th
 * **`--out`**: Output directory for the drawings (default: `output`).
 * **`--show`**: Also open the drawings in a window.
 
-## Minimal Working Example
+## Minimal Working Example (Python API)
 
 Since this package is not distributed via PyPI, execute your scripts from the root directory of the cloned repository and add `src` to the import path.
 
@@ -144,7 +144,7 @@ categorical = pd.read_csv("data/play_tennis.csv").drop(columns="Day")
 viz.print_tree(id3.fit(categorical, target="Play"))
 ```
 
-Trees are plain nested Python dictionaries (see the docstrings of `id3.py` and `c45.py`), so they can be inspected, traversed and modified directly.
+Trees are nested Python dictionaries (see the docstrings of `id3.py` and `c45.py`).
 
 ## Implemented C4.5 Variant
 
@@ -216,7 +216,7 @@ The script `benchmarks/benchmark.py` evaluates TreeClass, chefboost and Weka wit
 
 ## Datasets
 
-* **Play Tennis** (`data/play_tennis*.csv`): the classic example of Quinlan (1986, 1993), in a categorical and a numeric variant.
+* **Play Tennis** (`data/play_tennis*.csv`): the example of Quinlan (1986, 1993), in a categorical and a numeric variant.
 * **Iris** (`data/iris.data`), **Mushroom** (`data/mushroom.data`) and **Congressional Voting Records** (`data/house-votes-84.data`): from the [UCI Machine Learning Repository](https://archive.ics.uci.edu), licensed under CC BY 4.0.
 
 ## Outputs
