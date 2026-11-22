@@ -250,23 +250,23 @@ def run_benchmark(datasets, k=10, seed=0, use_chefboost=True, use_weka=True, fra
     With several fractions every dataset is also run on stratified samples of
     that size, to show how quality and time change with the number of cases.
     A tool that fails gets an error row, so the table is kept."""
+    jobs = [(dataset, fraction, entry) for dataset in datasets for fraction in fractions
+            for entry in methods(use_chefboost, use_weka)
+            if not (dataset == "iris" and "ID3" in entry[0].upper())]
     rows = []
-    for dataset in datasets:
-        for fraction in fractions:
-            for name, method, missing in methods(use_chefboost, use_weka):
-                if dataset == "iris":
-                    if "ID3" in name.upper():
-                        continue
-                    data = load_iris()
-                else:
-                    data = LOADERS[dataset](missing_as_nan=(missing == "nan"))
-                data = sample(data, fraction, seed)
-                try:
-                    row = evaluate(name, data, method, k, seed)
-                except Exception as err:
-                    row = {"method": name, "error": f"{type(err).__name__}: {err}"}
-                rows.append({"dataset": dataset, "fraction": fraction, "cases": len(data), **row})
-                print(f"{dataset}, {len(data)} cases, {name}: {row.get('error', 'done')}")
+    for i, (dataset, fraction, (name, method, missing)) in enumerate(jobs, 1):
+        if dataset == "iris":
+            data = load_iris()
+        else:
+            data = LOADERS[dataset](missing_as_nan=(missing == "nan"))
+        data = sample(data, fraction, seed)
+        print(f"[{i}/{len(jobs)}] {dataset}, {len(data)} cases, {name} ...", flush=True)
+        try:
+            row = evaluate(name, data, method, k, seed)
+        except Exception as err:
+            row = {"method": name, "error": f"{type(err).__name__}: {err}"}
+            print(f"    {row['error']}", flush=True)
+        rows.append({"dataset": dataset, "fraction": fraction, "cases": len(data), **row})
     return pd.DataFrame(rows)
 
 
