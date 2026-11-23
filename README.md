@@ -37,7 +37,7 @@ The notebook `TreeClass_demo.ipynb` can be run in the browser on Binder, without
    cd TreeClass
    ```
 
-2. Ensure you have Python 3.10 or higher installed (tested with Python 3.12):
+2. Ensure you have Python 3.12 installed (the version used for testing):
    ```bash
    python --version
    ```
@@ -54,7 +54,7 @@ The notebook `TreeClass_demo.ipynb` can be run in the browser on Binder, without
 ```
 src/            ID3 (id3.py), C4.5 (c45.py), visualization (visualize.py), command line pipeline (pipeline.py)
 tests/          tests of the article examples, edge cases and the benchmark datasets
-benchmarks/     benchmark against chefboost and Weka (benchmark.py), validation against Weka (j48_validation.py)
+benchmarks/     benchmark against chefboost and Weka (benchmark.py), validation against Weka (j48_validation.py), analysis of chefboost (check_chefboost_depth.py, check_chefboost_case.py)
 data/           Play Tennis variants and the UCI datasets
 .binder/        Binder environment configuration
 TreeClass_demo.ipynb   interactive demonstration notebook
@@ -150,13 +150,15 @@ Trees are nested Python dictionaries (see the docstrings of `id3.py` and `c45.py
 
 TreeClass follows C4.5 as described in Quinlan (1993), i.e. C4.5 Release 7:
 * Tests are chosen by gain ratio among the tests whose gain is at least the average gain.
-* Numeric thresholds are chosen by gain ratio at midpoints between adjacent values; there is no MDL penalty (both are changes of Release 8, Quinlan 1996).
+* Numeric thresholds are chosen by gain ratio at midpoints between adjacent values. Release 8 (Quinlan, 1996), implemented in Weka J48, chooses thresholds by gain and adds an MDL penalty; these changes are not included.
 * Missing attribute values are handled with fractional case weights during induction and classification.
 * Error-based pruning (CF = 25%) is checked at every node, bottom-up; as in Quinlan's code, a subtree is replaced by a leaf when the leaf's predicted errors are at most 0.1 above the subtree's.
 
-Deliberate simplifications:
+Deliberate simplifications and implementation details:
 * The minimum number of cases per branch defaults to 1 (Quinlan's default is 2); it can be changed with `--min-cases` / `min_cases`.
 * Subtree raising (replacing a node by its largest branch) is not implemented.
+* The stored threshold is the midpoint; Quinlan's program stores the largest training value not exceeding it (e.g. `<= 83` instead of `<= 84`). The training data are split identically.
+* Ties: among tests with the same criterion value the attribute that comes first in the data is selected; among classes with the same count, the first in alphabetical order.
 * The upper confidence limit uses the exact normal quantile (as in Weka J48) instead of Quinlan's interpolated table.
 
 ## Testing and Reproducibility
@@ -204,6 +206,12 @@ The script `benchmarks/benchmark.py` evaluates TreeClass, chefboost and Weka wit
   python benchmarks/benchmark.py --datasets mushroom --fractions 0.1 0.25 0.5 1 --out output/benchmark_scaling.csv
   ```
 
+* Effect of the default depth limit of chefboost (`max_depth = 5`) and the remaining differing test case:
+  ```bash
+  python benchmarks/check_chefboost_depth.py[TreeClass_demo (1).ipynb](..%2F..%2F..%2FDownloads%2FTreeClass_demo%20%281%29.ipynb)
+  python benchmarks/check_chefboost_case.py
+  ```
+
 ### Benchmark Command Options (`benchmark.py`)
 
 * **`--datasets`**: Datasets to run: `iris`, `mushroom`, `votes` (default: all).
@@ -227,4 +235,4 @@ The script `benchmarks/benchmark.py` evaluates TreeClass, chefboost and Weka wit
 
 ## License
 
-TreeClass is released under the license in [LICENSE](LICENSE). Weka is licensed under the GPL and is not distributed with this repository; it is downloaded from Maven Central when the validation is run.
+TreeClass is released under the MIT License (see [LICENSE](LICENSE)). Weka is licensed under the GPL and is not distributed with this repository; it is downloaded from Maven Central when the validation is run.
